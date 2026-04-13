@@ -1,0 +1,66 @@
+import { useEffect, useState } from 'react'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { StoreProvider, useStore } from './store'
+import { login } from './api'
+import NavBar from './components/NavBar'
+import Settings from './pages/Settings'
+import Automations from './pages/Automations'
+import Loader from './components/Loader'
+
+function Inner() {
+  const { user, setUser } = useStore()
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+
+  useEffect(() => {
+    const tg = window.Telegram?.WebApp
+    const initData = tg?.initData || ''
+
+    // dev fallback — пустой initData
+    login(initData || 'dev')
+      .then(u => {
+        setUser(u)
+        setLoading(false)
+      })
+      .catch(e => {
+        setError(e.message)
+        setLoading(false)
+      })
+  }, [])
+
+  if (loading) return <Loader />
+  if (error) return <ErrorScreen msg={error} />
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100dvh' }}>
+      <div style={{ flex: 1, overflowY: 'auto', paddingBottom: 72 }}>
+        <Routes>
+          <Route path="/" element={<Navigate to="/automations" replace />} />
+          <Route path="/automations" element={<Automations />} />
+          <Route path="/settings" element={<Settings />} />
+        </Routes>
+      </div>
+      <NavBar />
+    </div>
+  )
+}
+
+function ErrorScreen({ msg }) {
+  return (
+    <div style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', height:'100dvh', gap:12, padding:24 }}>
+      <span style={{ fontSize:32 }}>⚠️</span>
+      <p style={{ color:'var(--danger)', textAlign:'center', fontWeight:600 }}>Ошибка авторизации</p>
+      <p style={{ color:'var(--subtext)', textAlign:'center', fontSize:13 }}>{msg}</p>
+    </div>
+  )
+}
+
+export default function App() {
+  return (
+    <StoreProvider>
+      <BrowserRouter>
+        <Inner />
+      </BrowserRouter>
+    </StoreProvider>
+  )
+}
