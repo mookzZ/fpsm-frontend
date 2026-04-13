@@ -309,6 +309,34 @@ function AddModal({ userId, usedFunpayLotIds, onClose, onCreated, show }) {
           placeholder="Например: Подписчики Instagram"
         />
 
+        {selectedLot && (
+          <div style={{
+            background: 'rgba(79,114,245,0.1)',
+            border: '1px solid var(--accent-dim)',
+            borderRadius: 'var(--radius)',
+            padding: '10px 12px',
+            fontSize: 12,
+            color: 'var(--text)',
+            lineHeight: 1.6,
+          }}>
+            <p style={{ fontWeight: 700, marginBottom: 4 }}>⚠️ Важно</p>
+            <p>Добавьте в описание лота на FunPay следующую строку:</p>
+            <code style={{
+              display: 'block', marginTop: 6,
+              background: 'var(--surface)',
+              borderRadius: 6, padding: '6px 10px',
+              fontFamily: 'monospace', fontSize: 13,
+              color: 'var(--accent)',
+              userSelect: 'all',
+            }}>
+              id: {selectedLot.funpay_lot_id}
+            </code>
+            <p style={{ marginTop: 6, color: 'var(--subtext)' }}>
+              Без этой строки бот не сможет определить лот по заказу.
+            </p>
+          </div>
+        )}
+
         <Button onClick={handleCreate} loading={creating} disabled={!selectedLot || !smmId} full>
           Создать автоматизацию
         </Button>
