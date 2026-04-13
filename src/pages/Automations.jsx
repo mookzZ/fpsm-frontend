@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useStore } from '../store'
+import { useStore } from '../store.jsx'
 import { getAutomations, createAutomation, toggleAutomation, deleteAutomation, getLotsFromFunpay } from '../api'
 import Button from '../components/Button'
 import Toggle from '../components/Toggle'

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
-import { StoreProvider, useStore } from './store'
+import { StoreProvider, useStore } from './store.jsx'
 import { login } from './api'
 import NavBar from './components/NavBar'
 import Settings from './pages/Settings'

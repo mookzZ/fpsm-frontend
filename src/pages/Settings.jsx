@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useStore } from '../store'
+import { useStore } from '../store.jsx'
 import { saveKeys } from '../api'
 import Input from '../components/Input'
 import Button from '../components/Button'
