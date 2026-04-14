@@ -3,7 +3,7 @@ import { useStore } from '../store.jsx'
 import { saveKeys } from '../api'
 import Input from '../components/Input'
 import Button from '../components/Button'
-import { ToastContainer, useToast } from '../components/Toast'
+import { useToast } from '../components/Toast'
 
 export default function Settings() {
   const { user, setUser } = useStore()
@@ -41,9 +41,7 @@ export default function Settings() {
   }[user?.permission] || 'var(--subtext)'
 
   return (
-    <>
-      <ToastContainer />
-      <div className="fade-in" style={{ padding: '20px 16px', display: 'flex', flexDirection: 'column', gap: 24 }}>
+    <div className="fade-in" style={{ padding: '20px 16px', display: 'flex', flexDirection: 'column', gap: 24 }}>
 
         {/* Account info */}
         <section>
@@ -98,8 +96,7 @@ export default function Settings() {
           </div>
         </section>
 
-      </div>
-    </>
+    </div>
   )
 }
 
