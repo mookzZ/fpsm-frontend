@@ -1,8 +1,9 @@
 import { NavLink } from 'react-router-dom'
 
 const tabs = [
-  { to: '/automations', label: 'Авто',    icon: IconAuto },
-  { to: '/orders',      label: 'Заказы',  icon: IconOrders },
+  { to: '/automations', label: 'Авто',     icon: IconAuto },
+  { to: '/orders',      label: 'Заказы',   icon: IconOrders },
+  { to: '/history',     label: 'История',  icon: IconHistory },
   { to: '/settings',    label: 'Настройки', icon: IconSettings },
 ]
 
@@ -58,6 +59,16 @@ function IconOrders({ color }) {
       <line x1="8" y1="8" x2="16" y2="8" />
       <line x1="8" y1="12" x2="16" y2="12" />
       <line x1="8" y1="16" x2="12" y2="16" />
+    </svg>
+  )
+}
+
+function IconHistory({ color }) {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={{ transition: 'stroke 0.15s' }}>
+      <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+      <path d="M3 3v5h5" />
+      <path d="M12 7v5l4 2" />
     </svg>
   )
 }

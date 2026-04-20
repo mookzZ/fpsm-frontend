@@ -6,6 +6,7 @@ import NavBar from './components/NavBar'
 import Settings from './pages/Settings'
 import Automations from './pages/Automations'
 import Orders from './pages/Orders'
+import History from './pages/History'
 import Loader from './components/Loader'
 import { ToastContainer, useToast } from './components/Toast'
 
@@ -49,6 +50,7 @@ function Inner() {
               <Route path="/" element={<Navigate to="/automations" replace />} />
               <Route path="/automations" element={<Automations />} />
               <Route path="/orders" element={<Orders />} />
+              <Route path="/history" element={<History />} />
               <Route path="/settings" element={<Settings />} />
             </Routes>
           </div>

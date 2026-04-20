@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useStore } from '../store.jsx'
-import { getOrders, getAutomations } from '../api'
+import { getOrders, getAutomations, funpayOrderUrl } from '../api'
 import { useToast } from '../components/Toast'
 import Loader from '../components/Loader'
 
@@ -98,7 +98,10 @@ function OrderCard({ order, automation, onClick }) {
       }}
     >
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 6 }}>
-        <span style={{ fontWeight: 700, fontSize: 13 }}>#{order.funpay_order_id}</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{ fontWeight: 700, fontSize: 13 }}>#{order.funpay_order_id}</span>
+          <FunPayLink orderId={order.funpay_order_id} />
+        </div>
         <StatusBadge status={svc?.status} />
       </div>
       {order.buyer_username && (
@@ -132,7 +135,10 @@ function OrderDetailModal({ order, automation, onClose }) {
         maxHeight: '85dvh', overflowY: 'auto',
       }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-          <p style={{ fontWeight: 700, fontSize: 16 }}>Заказ #{order.funpay_order_id}</p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <p style={{ fontWeight: 700, fontSize: 16 }}>Заказ #{order.funpay_order_id}</p>
+            <FunPayLink orderId={order.funpay_order_id} />
+          </div>
           <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--subtext)', fontSize: 22, lineHeight: 1, cursor: 'pointer' }}>×</button>
         </div>
 
@@ -173,6 +179,29 @@ function OrderDetailModal({ order, automation, onClose }) {
         </p>
       </div>
     </div>
+  )
+}
+
+function FunPayLink({ orderId }) {
+  return (
+    <a
+      href={funpayOrderUrl(orderId)}
+      target="_blank"
+      rel="noopener noreferrer"
+      onClick={e => e.stopPropagation()}
+      style={{
+        display: 'inline-flex', alignItems: 'center', gap: 3,
+        color: 'var(--accent)', fontSize: 11, fontWeight: 600,
+        textDecoration: 'none',
+      }}
+    >
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+        <polyline points="15 3 21 3 21 9" />
+        <line x1="10" y1="14" x2="21" y2="3" />
+      </svg>
+      FunPay
+    </a>
   )
 }
 

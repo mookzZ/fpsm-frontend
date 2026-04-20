@@ -43,6 +43,14 @@ export const toggleAutomation = (userId, id, is_active) =>
 export const deleteAutomation = (userId, id) =>
   req('DELETE', `/api/automations/${id}`, null, userId)
 
-// Orders
+// Orders (активные)
 export const getOrders = (userId) =>
   req('GET', '/api/orders/', null, userId)
+
+// History — те же данные, фильтрация на фронте
+export const getAllOrders = (userId) =>
+  req('GET', '/api/orders/', null, userId)
+
+// FunPay order URL helper
+export const funpayOrderUrl = (funpay_order_id) =>
+  `https://funpay.com/orders/${funpay_order_id}/`

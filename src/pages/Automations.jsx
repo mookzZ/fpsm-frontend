@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useStore } from '../store.jsx'
-import { getAutomations, createAutomation, toggleAutomation, deleteAutomation, getLotsFromFunpay, getOrders } from '../api'
+import { getAutomations, createAutomation, toggleAutomation, deleteAutomation, getLotsFromFunpay } from '../api'
 import Button from '../components/Button'
 import Toggle from '../components/Toggle'
 import Input from '../components/Input'
@@ -85,7 +85,6 @@ export default function Automations() {
             <AutomationCard
               key={a.id}
               data={a}
-              userId={user.user_id}
               onToggle={() => handleToggle(a.id, a.is_active)}
               onDelete={() => handleDelete(a.id)}
             />
@@ -110,9 +109,8 @@ export default function Automations() {
   )
 }
 
-function AutomationCard({ data, userId, onToggle, onDelete }) {
+function AutomationCard({ data, onToggle, onDelete }) {
   const [confirmDelete, setConfirmDelete] = useState(false)
-  const [showHistory, setShowHistory] = useState(false)
 
   return (
     <div style={{
@@ -144,13 +142,6 @@ function AutomationCard({ data, userId, onToggle, onDelete }) {
       </div>
 
       <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-        <button
-          onClick={() => setShowHistory(true)}
-          style={{ background: 'none', border: 'none', color: 'var(--accent)', fontSize: 12, fontWeight: 600, cursor: 'pointer', padding: 0, fontFamily: 'var(--font)' }}
-        >
-          История
-        </button>
-
         {!confirmDelete ? (
           <button
             onClick={() => setConfirmDelete(true)}
@@ -170,173 +161,6 @@ function AutomationCard({ data, userId, onToggle, onDelete }) {
         )}
       </div>
 
-      {showHistory && (
-        <HistoryModal
-          automation={data}
-          userId={userId}
-          onClose={() => setShowHistory(false)}
-        />
-      )}
-    </div>
-  )
-}
-
-function HistoryModal({ automation, userId, onClose }) {
-  const { show } = useToast()
-  const [loading, setLoading] = useState(true)
-  const [orders, setOrders] = useState([])
-  const [selected, setSelected] = useState(null)
-
-  useEffect(() => {
-    getOrders(userId)
-      .then(all => {
-        const filtered = all
-          .filter(o => o.lot_funpay_id === automation.funpay_lot_id)
-          .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
-        setOrders(filtered)
-      })
-      .catch(e => show(e.message, 'error'))
-      .finally(() => setLoading(false))
-  }, [])
-
-  return (
-    <div
-      style={{ position: 'fixed', inset: 0, zIndex: 200, background: 'rgba(0,0,0,0.7)', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}
-      onClick={e => e.target === e.currentTarget && onClose()}
-    >
-      <div className="fade-in" style={{
-        background: 'var(--surface)',
-        borderTop: '1px solid var(--border)',
-        borderRadius: '16px 16px 0 0',
-        padding: '20px 16px 36px',
-        maxHeight: '85dvh', overflowY: 'auto',
-        display: 'flex', flexDirection: 'column', gap: 16,
-      }}>
-        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
-          <div>
-            <p style={{ fontWeight: 700, fontSize: 16 }}>История заказов</p>
-            <p style={{ color: 'var(--subtext)', fontSize: 12, marginTop: 2 }}>{automation.lot_title}</p>
-          </div>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--subtext)', fontSize: 22, lineHeight: 1, cursor: 'pointer' }}>×</button>
-        </div>
-
-        {selected ? (
-          <OrderDetail order={selected} onBack={() => setSelected(null)} />
-        ) : loading ? (
-          <div style={{ display: 'flex', justifyContent: 'center', padding: 32 }}>
-            <Spinner />
-          </div>
-        ) : orders.length === 0 ? (
-          <p style={{ color: 'var(--subtext)', fontSize: 13, textAlign: 'center', padding: '32px 0' }}>
-            Нет заказов по этой автоматизации
-          </p>
-        ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {orders.map(o => (
-              <OrderRow key={o.order_id} order={o} onClick={() => setSelected(o)} />
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
-  )
-}
-
-function OrderRow({ order, onClick }) {
-  const svc = order.service
-  return (
-    <div
-      onClick={onClick}
-      style={{
-        background: 'var(--surface-2)',
-        border: '1px solid var(--border)',
-        borderRadius: 'var(--radius)',
-        padding: '12px 14px',
-        cursor: 'pointer',
-        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-      }}
-    >
-      <div>
-        <p style={{ fontWeight: 700, fontSize: 13 }}>#{order.funpay_order_id}</p>
-        <p style={{ color: 'var(--subtext)', fontSize: 11, marginTop: 2 }}>
-          {new Date(order.created_at).toLocaleDateString('ru-RU')}
-          {order.buyer_username && ` · @${order.buyer_username}`}
-        </p>
-      </div>
-      <StatusBadge status={svc?.status} />
-    </div>
-  )
-}
-
-function OrderDetail({ order, onBack }) {
-  const svc = order.service
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
-      <button
-        onClick={onBack}
-        style={{ background: 'none', border: 'none', color: 'var(--accent)', fontSize: 13, fontWeight: 600, cursor: 'pointer', padding: '0 0 14px 0', fontFamily: 'var(--font)', textAlign: 'left' }}
-      >
-        ← Назад
-      </button>
-
-      <p style={{ fontWeight: 700, fontSize: 15, marginBottom: 14 }}>Заказ #{order.funpay_order_id}</p>
-
-      <InfoBlock>
-        <InfoRow label="Статус" value={<StatusBadge status={svc?.status} />} />
-        <InfoRow label="Покупатель" value={order.buyer_username ? `@${order.buyer_username}` : '—'} />
-        <InfoRow label="Ссылка / ник" value={order.buyer_input || '—'} />
-        <InfoRow label="Сумма" value={order.sum_ != null ? `${order.sum_} ₽` : '—'} />
-        <InfoRow label="Количество" value={order.quantity ?? '—'} last />
-      </InfoBlock>
-
-      {svc && (
-        <>
-          <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--subtext)', margin: '14px 0 8px 2px' }}>SMM</p>
-          <InfoBlock>
-            <InfoRow label="SMM Service ID" value={svc.smm_service_id ?? '—'} />
-            <InfoRow label="SMM Order ID" value={svc.smm_order_id ?? '—'} last />
-          </InfoBlock>
-        </>
-      )}
-
-      <p style={{ fontSize: 11, color: 'var(--subtext)', marginTop: 14, textAlign: 'center' }}>
-        {new Date(order.created_at).toLocaleString('ru-RU')}
-      </p>
-    </div>
-  )
-}
-
-function StatusBadge({ status }) {
-  const color = SERVICE_STATUS_COLOR[status] || 'var(--subtext)'
-  return (
-    <span style={{
-      fontSize: 10, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase',
-      color, background: `${color}20`,
-      borderRadius: 4, padding: '3px 7px', whiteSpace: 'nowrap',
-    }}>
-      {SERVICE_STATUS_LABEL[status] || status}
-    </span>
-  )
-}
-
-function InfoBlock({ children }) {
-  return (
-    <div style={{ background: 'var(--surface-2)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', overflow: 'hidden' }}>
-      {children}
-    </div>
-  )
-}
-
-function InfoRow({ label, value, last }) {
-  return (
-    <div style={{
-      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-      padding: '11px 14px',
-      borderBottom: last ? 'none' : '1px solid var(--border)',
-      gap: 12,
-    }}>
-      <span style={{ color: 'var(--subtext)', fontWeight: 500, fontSize: 12, flexShrink: 0 }}>{label}</span>
-      <span style={{ fontWeight: 600, fontSize: 12, textAlign: 'right', wordBreak: 'break-all' }}>{value}</span>
     </div>
   )
 }
