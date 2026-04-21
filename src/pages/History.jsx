@@ -5,19 +5,23 @@ import { useToast } from '../components/Toast'
 import Loader from '../components/Loader'
 
 const STATUS_LABEL = {
-  pending_input:    'Ожидает ссылку',
-  awaiting_confirm: 'Ожидает подтверждение',
-  processing:       'В обработке',
-  done:             'Выполнен',
-  failed:           'Ошибка',
+  pending_input:      'Ожидает ссылку',
+  awaiting_confirm:   'Ожидает подтверждение',
+  processing:         'В обработке',
+  done:               'Выполнен',
+  failed:             'Отменен',
+  needs_attention:    'Требует внимания',
+  operator_requested: 'Оператор',
 }
 
 const STATUS_COLOR = {
-  pending_input:    'var(--warn)',
-  awaiting_confirm: 'var(--warn)',
-  processing:       'var(--accent)',
-  done:             'var(--success)',
-  failed:           'var(--danger)',
+  pending_input:      'var(--warn)',
+  awaiting_confirm:   'var(--warn)',
+  processing:         'var(--accent)',
+  done:               'var(--success)',
+  failed:             'var(--danger)',
+  needs_attention:    '#f5c842',
+  operator_requested: '#f5c842',
 }
 
 export default function History() {
@@ -26,17 +30,16 @@ export default function History() {
   const [loading, setLoading] = useState(true)
   const [groups, setGroups] = useState([])   // [{ funpay_lot_id, lot_title, orders }]
   const [selected, setSelected] = useState(null)
+  const [search, setSearch] = useState('')
 
   useEffect(() => {
     Promise.all([getAllOrders(user.user_id), getAutomations(user.user_id)])
       .then(([allOrders, auts]) => {
-        // Строим map funpay_lot_id → lot_title из автоматизаций
         const titleMap = {}
         auts.forEach(a => {
           if (a.funpay_lot_id) titleMap[a.funpay_lot_id] = a.lot_title || a.funpay_lot_id
         })
 
-        // Группируем заказы по funpay_lot_id
         const map = {}
         allOrders.forEach(o => {
           const key = o.lot_funpay_id || 'unknown'
@@ -44,14 +47,12 @@ export default function History() {
           map[key].push(o)
         })
 
-        // Сортируем заказы внутри группы по дате (новые сверху)
         const result = Object.entries(map)
           .map(([lotId, orders]) => ({
             funpay_lot_id: lotId,
             lot_title: titleMap[lotId] || `Лот ${lotId}`,
             orders: orders.sort((a, b) => new Date(b.created_at) - new Date(a.created_at)),
           }))
-          // Группы сортируем по дате последнего заказа
           .sort((a, b) => new Date(b.orders[0].created_at) - new Date(a.orders[0].created_at))
 
         setGroups(result)
@@ -71,22 +72,44 @@ export default function History() {
     )
   }
 
+  const q = search.trim().toLowerCase()
+
   return (
-    <div className="fade-in" style={{ padding: '20px 16px', display: 'flex', flexDirection: 'column', gap: 20 }}>
+    <div className="fade-in" style={{ padding: '20px 16px', display: 'flex', flexDirection: 'column', gap: 16 }}>
       <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--subtext)' }}>
         История заказов
       </p>
 
+      <input
+        value={search}
+        onChange={e => setSearch(e.target.value)}
+        placeholder="Поиск по ID или покупателю..."
+        style={{
+          width: '100%', background: 'var(--surface)', border: '1px solid var(--border)',
+          borderRadius: 'var(--radius)', padding: '10px 12px', color: 'var(--text)',
+          fontSize: 13, fontFamily: 'var(--font)', boxSizing: 'border-box', outline: 'none',
+        }}
+      />
+
       {groups.length === 0 ? (
         <Empty />
       ) : (
-        groups.map(group => (
-          <LotGroup
-            key={group.funpay_lot_id}
-            group={group}
-            onSelectOrder={setSelected}
-          />
-        ))
+        groups.map(group => {
+          const filteredOrders = q
+            ? group.orders.filter(o =>
+                o.funpay_order_id.toLowerCase().includes(q) ||
+                (o.buyer_username || '').toLowerCase().includes(q)
+              )
+            : group.orders
+          if (filteredOrders.length === 0) return null
+          return (
+            <LotGroup
+              key={group.funpay_lot_id}
+              group={{ ...group, orders: filteredOrders }}
+              onSelectOrder={setSelected}
+            />
+          )
+        })
       )}
     </div>
   )
@@ -97,7 +120,6 @@ function LotGroup({ group, onSelectOrder }) {
 
   return (
     <div>
-      {/* Lot header */}
       <button
         onClick={() => setExpanded(v => !v)}
         style={{
@@ -149,6 +171,7 @@ function OrderRow({ order, onClick }) {
       style={{
         background: 'var(--surface)',
         border: '1px solid var(--border)',
+        borderLeft: `3px solid ${STATUS_COLOR[svc?.status] || 'var(--border)'}`,
         borderRadius: 'var(--radius)',
         padding: '12px 14px',
         display: 'flex', justifyContent: 'space-between', alignItems: 'center',

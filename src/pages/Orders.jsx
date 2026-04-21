@@ -7,19 +7,23 @@ import Loader from '../components/Loader'
 const ACTIVE_STATUSES = new Set(['pending_input', 'awaiting_confirm', 'processing'])
 
 const STATUS_LABEL = {
-  pending_input:    'Ожидает ссылку',
-  awaiting_confirm: 'Ожидает подтверждение',
-  processing:       'В обработке',
-  done:             'Выполнен',
-  failed:           'Ошибка',
+  pending_input:      'Ожидает ссылку',
+  awaiting_confirm:   'Ожидает подтверждение',
+  processing:         'В обработке',
+  done:               'Выполнен',
+  failed:             'Отменен',
+  needs_attention:    'Требует внимания',
+  operator_requested: 'Оператор',
 }
 
 const STATUS_COLOR = {
-  pending_input:    'var(--warn)',
-  awaiting_confirm: 'var(--warn)',
-  processing:       'var(--accent)',
-  done:             'var(--success)',
-  failed:           'var(--danger)',
+  pending_input:      'var(--warn)',
+  awaiting_confirm:   'var(--warn)',
+  processing:         'var(--accent)',
+  done:               'var(--success)',
+  failed:             'var(--danger)',
+  needs_attention:    '#f5c842',
+  operator_requested: '#f5c842',
 }
 
 export default function Orders() {
@@ -29,6 +33,7 @@ export default function Orders() {
   const [orders, setOrders] = useState([])
   const [automations, setAutomations] = useState([])
   const [selected, setSelected] = useState(null)
+  const [search, setSearch] = useState('')
 
   useEffect(() => {
     Promise.all([getOrders(user.user_id), getAutomations(user.user_id)])
@@ -47,20 +52,38 @@ export default function Orders() {
   const findAutomation = (lotFunpayId) =>
     automations.find(a => a.funpay_lot_id === lotFunpayId) || null
 
+  const filtered = search.trim()
+    ? orders.filter(o =>
+        o.funpay_order_id.toLowerCase().includes(search.toLowerCase()) ||
+        (o.buyer_username || '').toLowerCase().includes(search.toLowerCase())
+      )
+    : orders
+
   if (loading) return <Loader />
 
   return (
     <div className="fade-in" style={{ padding: '20px 16px', display: 'flex', flexDirection: 'column', gap: 16 }}>
 
       <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--subtext)' }}>
-        Текущие заказы · {orders.length}
+        Текущие заказы · {filtered.length}
       </p>
 
-      {orders.length === 0 ? (
+      <input
+        value={search}
+        onChange={e => setSearch(e.target.value)}
+        placeholder="Поиск по ID или покупателю..."
+        style={{
+          width: '100%', background: 'var(--surface)', border: '1px solid var(--border)',
+          borderRadius: 'var(--radius)', padding: '10px 12px', color: 'var(--text)',
+          fontSize: 13, fontFamily: 'var(--font)', boxSizing: 'border-box', outline: 'none',
+        }}
+      />
+
+      {filtered.length === 0 ? (
         <Empty />
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          {orders.map(o => (
+          {filtered.map(o => (
             <OrderCard
               key={o.order_id}
               order={o}
